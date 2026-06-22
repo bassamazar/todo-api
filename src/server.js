@@ -7,7 +7,7 @@ app.use(express.json());
 
 
 app.use('/api', todoRoutes);
-app.use('/user', userRoutes);
+app.use('/api/user', userRoutes);
 
 const PORT = 3000;
 app.listen(PORT, () => {

@@ -7,7 +7,12 @@ const todoSchema = Joi.object({
         'any.required': 'Title is required'
     }),
     description: Joi.string().optional(),
-    completed: Joi.boolean().optional()
+    completed: Joi.boolean().optional(),
+    // تم إضافة الـ userId هنا ليسمح له بالمرور
+    userId: Joi.number().integer().required().messages({
+        'number.base': 'User ID must be a number',
+        'any.required': 'User ID is required'
+    })
 });
 
 const validateTodo = (req, res, next) => {
@@ -22,7 +27,7 @@ const validateTodo = (req, res, next) => {
             }))
         });
     }
-    next(); // إذا كانت البيانات صحيحة، ننتقل للـ Controller
+    next(); 
 };
 
 module.exports = { validateTodo };

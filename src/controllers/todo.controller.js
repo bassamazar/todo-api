@@ -2,8 +2,12 @@ const todoService = require('../services/todo.service');
 
 const getTodos = async (req, res) => {
     try {
-        // نمرر req.query مباشرة إلى الخدمة
-        const todos = await todoService.findAll(req.query);
+        // نأخذ الـ userId من الـ query (أو من الـ user object إذا كنت تستخدم Authentication)
+        const userId = req.query.userId; 
+        
+        // نمرر الـ query والـ userId للـ service
+        const todos = await todoService.findAll(req.query, userId);
+        
         res.json({ data: todos });
     } catch (err) {
         res.status(500).json({ error: err.message });

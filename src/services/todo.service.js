@@ -1,22 +1,22 @@
 const prisma = require('../DB/prisma');
 
-const findAll = async (query) => {
+const findAll = async (query, userId) => {
     const { page = 1, limit = 10, search, sort = 'createdAt', order = 'desc' } = query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    // بناء كائن الـ where ديناميكياً
-    const where = search ? { title: { contains: search, mode: 'insensitive' } } : {};
+    // التعديل هنا: نستخدم السبريد أوبريتور لإنشاء كائن الـ where بذكاء
+    const where = {
+        ...(userId && { userId: parseInt(userId) }), 
+        ...(search && { title: { contains: search, mode: 'insensitive' } })
+    };
 
     return await prisma.todo.findMany({
         where: where,
         orderBy: { [sort]: order },
         skip: skip,
         take: parseInt(limit),
-        // هنا نقوم بجلب بيانات المستخدم مع كل مهمة
         include: {
-            user: {
-                select: { name: true } // جلب الاسم فقط
-            }
+            user: { select: { name: true } }
         }
     });
 };

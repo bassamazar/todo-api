@@ -16,9 +16,9 @@ const findAll = async (query, userId) => {
         ...(description && { description: { contains: description, mode: 'insensitive' } }),
         ...(completed !== undefined && { completed: completed === 'true' }),
         ...( (startDate || endDate) && {
-            createdAt: {
-                ...(startDate && { gte: new Date(startDate) }),
-                ...(endDate && { lte: new Date(endDate) })
+        dueDate: { // غيرنا هنا من createdAt إلى dueDate
+            ...(startDate && { gte: new Date(startDate) }),
+            ...(endDate && { lte: new Date(endDate) })
             }
         })
     };

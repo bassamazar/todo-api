@@ -1,13 +1,26 @@
 const prisma = require('../DB/prisma');
 
 const findAll = async (query, userId) => {
-    const { page = 1, limit = 10, search, sort = 'createdAt', order = 'desc' } = query;
+    const { 
+        page = 1, limit = 10, search, 
+        description, startDate, endDate, completed,
+        sort = 'createdAt', order = 'desc' 
+    } = query;
+
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    // التعديل هنا: نستخدم السبريد أوبريتور لإنشاء كائن الـ where بذكاء
+    // بناء كائن الـ where الديناميكي
     const where = {
-        ...(userId && { userId: parseInt(userId) }), 
-        ...(search && { title: { contains: search, mode: 'insensitive' } })
+        ...(userId && { userId: parseInt(userId) }),
+        ...(search && { title: { contains: search, mode: 'insensitive' } }),
+        ...(description && { description: { contains: description, mode: 'insensitive' } }),
+        ...(completed !== undefined && { completed: completed === 'true' }),
+        ...( (startDate || endDate) && {
+            createdAt: {
+                ...(startDate && { gte: new Date(startDate) }),
+                ...(endDate && { lte: new Date(endDate) })
+            }
+        })
     };
 
     return await prisma.todo.findMany({
@@ -15,9 +28,7 @@ const findAll = async (query, userId) => {
         orderBy: { [sort]: order },
         skip: skip,
         take: parseInt(limit),
-        include: {
-            user: { select: { name: true } }
-        }
+        include: { user: { select: { name: true } } }
     });
 };
 

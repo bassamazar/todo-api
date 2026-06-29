@@ -19,12 +19,17 @@ model Todo {
   user        User     @relation(fields: [userId], references: [id])
 }
 
-model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email     String   @unique  
-  password  String
-  todos Todo[]
-  createdAt DateTime @default(now())
+enum Role {
+  USER
+  ADMIN
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique  
+  password  String
+  role      Role     @default(USER) // إضافة حقل الدور
+  todos     Todo[]
+  createdAt DateTime @default(now())
+}

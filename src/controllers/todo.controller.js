@@ -2,32 +2,30 @@ const todoService = require('../services/todo.service');
 
 const getTodos = async (req, res) => {
     try {
-        // نأخذ الـ userId من الـ query (أو من الـ user object إذا كنت تستخدم Authentication)
-        const userId = req.query.userId; 
-        
-        // نمرر الـ query والـ userId للـ service
+        const userId = req.user.userId;
         const todos = await todoService.findAll(req.query, userId);
-        
         res.json({ data: todos });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
+// في src/controllers/todo.controller.js
 const createTodo = async (req, res) => {
     try {
-        const newTodo = await todoService.create(req.body);
+        const userId = req.user.userId; // القادم من التوكين
+        const newTodo = await todoService.create(req.body, userId); // تمرير userId كمعامل ثاني
         res.status(201).json({ message: "Success", data: newTodo });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        res.status(500).json({ error: err.message }); 
+    }
 };
-
-
-// ... (الدوال السابقة: getTodos, createTodo)
 
 const deleteTodo = async (req, res) => {
     try {
         const { id } = req.params;
-        await todoService.deleteTodo(id);
+        const userId = req.user.userId;
+        await todoService.deleteTodo(id, userId);
         res.json({ message: "Todo deleted successfully" });
     } catch (err) { 
         res.status(500).json({ error: "Could not delete todo" }); 
@@ -37,7 +35,8 @@ const deleteTodo = async (req, res) => {
 const updateTodo = async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedTodo = await todoService.update(id, req.body);
+        const userId = req.user.userId;
+        const updatedTodo = await todoService.update(id, req.body, userId);
         res.json({ message: "Todo updated successfully", data: updatedTodo });
     } catch (err) {
         res.status(500).json({ error: "Could not update todo" });
@@ -47,26 +46,29 @@ const updateTodo = async (req, res) => {
 const getTodoById = async (req, res) => {
     try {
         const { id } = req.params;
-        const todo = await todoService.findOne(id);
+        const userId = req.user.userId;
+        const todo = await todoService.findOne(id, userId);
         
         if (!todo) {
             return res.status(404).json({ error: "Todo not found" });
         }
-        
         res.json({ data: todo });
     } catch (err) {
         res.status(500).json({ error: "Could not fetch todo" });
     }
 };
+
 const toggleTodoStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { completed } = req.body; // نأخذ الحالة الجديدة من الـ Body
+        const userId = req.user.userId;
+        const { completed } = req.body;
         
-        const updatedTodo = await todoService.update(id, { completed });
+        const updatedTodo = await todoService.update(id, { completed }, userId);
         res.json({ message: "Status updated successfully", data: updatedTodo });
     } catch (err) {
         res.status(500).json({ error: "Could not update status" });
     }
 };
-module.exports = { getTodos, createTodo, deleteTodo, updateTodo, getTodoById, toggleTodoStatus };
+
+module.exports = {getTodos,createTodo,deleteTodo,updateTodo,getTodoById,toggleTodoStatus };

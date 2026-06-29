@@ -1,4 +1,5 @@
 // src/controllers/authController.js
+const jwt = require('jsonwebtoken');
 const authService = require('../services/authService');
 
 const register = async (req, res) => {
@@ -14,12 +15,24 @@ const register = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        // هنا نستخدم الخدمة التي كتبناها سابقاً للحصول على التوكن
-        const token = await authService.login(email, password);
+        
+        // 1. الحصول على بيانات المستخدم من الخدمة
+        const user = await authService.login(email, password); 
+        
+        // 2. إنشاء التوكين مع تضمين الـ role (وهذا هو التغيير الجوهري)
+        const token = jwt.sign(
+            { 
+                userId: user.id, 
+                role: user.role // نضمن إضافة الدور هنا
+            }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '1h' }
+        );
+
         res.json({ message: "Login successful", token });
     } catch (error) {
         res.status(401).json({ error: error.message });
     }
 };
 
-module.exports = { register, login }; // أضفنا login هنا
+module.exports = { register, login }; 

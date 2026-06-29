@@ -1,61 +1,54 @@
 const prisma = require('../DB/prisma');
 
 const findAll = async (query, userId) => {
-    const { 
-        page = 1, limit = 10, search, 
-        description, startDate, endDate, completed,
-        sort = 'createdAt', order = 'desc' 
-    } = query;
-
+    const { page = 1, limit = 10, search, completed, sort = 'createdAt', order = 'desc' } = query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    
-    // بناء كائن الـ where الديناميكي
-    const where = {
-        ...(userId && { userId: parseInt(userId) }),
-        ...(search && { title: { contains: search, mode: 'insensitive' } }),
-        ...(description && { description: { contains: description, mode: 'insensitive' } }),
-        ...(completed !== undefined && { completed: completed === 'true' }),
-        ...( (startDate || endDate) && {
-        dueDate: { // غيرنا هنا من createdAt إلى dueDate
-            ...(startDate && { gte: new Date(startDate) }),
-            ...(endDate && { lte: new Date(endDate) })
-            }
-        })
+
+    // بناء الـ where بشكل أوضح
+    const whereCondition = {
+        userId: parseInt(userId), // هنا نضمن أن القيمة رقمية
     };
 
+    if (search) whereCondition.title = { contains: search, mode: 'insensitive' };
+    if (completed !== undefined) whereCondition.completed = completed === 'true';
+
     return await prisma.todo.findMany({
-        where: where,
+        where: whereCondition,
         orderBy: { [sort]: order },
         skip: skip,
-        take: parseInt(limit),
-        include: { user: { select: { name: true } } }
+        take: parseInt(limit)
     });
 };
 
-const create = async (data) => await prisma.todo.create({ data });
-
-const deleteTodo = async (id) => {
-    return await prisma.todo.delete({
-        where: { id: parseInt(id) }
-    });
-};
-
-const update = async (id, data) => {
-    return await prisma.todo.update({
-        where: { id: parseInt(id) },
-        data: data,
-    });
-};
-
-const findOne = async (id) => {
-    return await prisma.todo.findUnique({
-        where: { id: parseInt(id) },
-        // إضافة الـ include هنا أيضاً لجلب اسم المستخدم عند البحث عن مهمة واحدة
-        include: {
+const create = async (data, userId) => {
+    return await prisma.todo.create({
+        data: {
+            title: data.title,
+            description: data.description,
+            // نستخدم connect للربط مع جدول المستخدمين عبر الـ userId
             user: {
-                select: { name: true }
+                connect: { id: parseInt(userId) }
             }
         }
+    });
+};
+
+const deleteTodo = async (id, userId) => {
+    return await prisma.todo.deleteMany({
+        where: { id: parseInt(id), userId: parseInt(userId) }
+    });
+};
+
+const update = async (id, data, userId) => {
+    return await prisma.todo.updateMany({
+        where: { id: parseInt(id), userId: parseInt(userId) },
+        data: data
+    });
+};
+
+const findOne = async (id, userId) => {
+    return await prisma.todo.findFirst({
+        where: { id: parseInt(id), userId: parseInt(userId) }
     });
 };
 

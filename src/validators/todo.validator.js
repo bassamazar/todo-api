@@ -7,12 +7,8 @@ const todoSchema = Joi.object({
         'any.required': 'Title is required'
     }),
     description: Joi.string().optional(),
-    completed: Joi.boolean().optional(),
-    // تم إضافة الـ userId هنا ليسمح له بالمرور
-    userId: Joi.number().integer().required().messages({
-        'number.base': 'User ID must be a number',
-        'any.required': 'User ID is required'
-    })
+    completed: Joi.boolean().optional()
+    // لاحظ أن userId تم حذفه لأنه لا يأتي من الـ body
 });
 
 const validateTodo = (req, res, next) => {

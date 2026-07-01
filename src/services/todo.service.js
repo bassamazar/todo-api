@@ -33,15 +33,19 @@ const create = async (data, userId) => {
     });
 };
 
-const deleteTodo = async (id, userId) => {
+const deleteTodo = async (id, userId, role) => {
+   const whereClause = (role === 'ADMIN') ? { id: parseInt(id) } : { id: parseInt(id), userId };
+    
     return await prisma.todo.deleteMany({
-        where: { id: parseInt(id), userId: parseInt(userId) }
+        where: whereClause
     });
 };
 
-const update = async (id, data, userId) => {
+const update = async (id, userId, role, data) => {
+    const whereClause = (role === 'ADMIN') ? { id: parseInt(id) } : { id: parseInt(id), userId };
+    
     return await prisma.todo.updateMany({
-        where: { id: parseInt(id), userId: parseInt(userId) },
+        where: whereClause,
         data: data
     });
 };
@@ -52,4 +56,10 @@ const findOne = async (id, userId) => {
     });
 };
 
-module.exports = { findAll, create, deleteTodo, update, findOne };
+const findAllAdmin = async () => {
+    return await prisma.todo.findMany({
+        include: { user: true } // اختيارياً: لجلب معلومات المستخدم صاحب المهمة
+    });
+};
+
+module.exports = { findAll, create, deleteTodo, update, findOne , findAllAdmin };

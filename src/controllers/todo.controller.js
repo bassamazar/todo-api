@@ -2,41 +2,46 @@ const todoService = require('../services/todo.service');
 
 const getTodos = async (req, res) => {
     try {
-        const userId = req.user.userId;
-        const todos = await todoService.findAll(req.query, userId);
+        const { userId, role } = req.user;
+        let todos;
+
+        if (role === 'ADMIN') {
+            // الأدمن يحصل على كل شيء
+            todos = await todoService.findAllAdmin();
+        } else {
+            // المستخدم العادي يحصل على مهامه فقط
+            todos = await todoService.findAll(req.query, userId);
+        }
+
         res.json({ data: todos });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-// في src/controllers/todo.controller.js
 const createTodo = async (req, res) => {
     try {
-        const userId = req.user.userId; // القادم من التوكين
-        const newTodo = await todoService.create(req.body, userId); // تمرير userId كمعامل ثاني
+        const userId = req.user.userId;
+        const newTodo = await todoService.create(req.body, userId);
         res.status(201).json({ message: "Success", data: newTodo });
     } catch (err) { 
         res.status(500).json({ error: err.message }); 
     }
 };
 
+// لاحظ البساطة! لا نحتاج للتحقق من الأدمن هنا، الميدل وير قام به.
 const deleteTodo = async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.user.userId;
-        await todoService.deleteTodo(id, userId);
+        await todoService.delete(req.params.id);
         res.json({ message: "Todo deleted successfully" });
-    } catch (err) { 
-        res.status(500).json({ error: "Could not delete todo" }); 
+    } catch (err) {
+        res.status(500).json({ error: "Could not delete todo" });
     }
 };
 
 const updateTodo = async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.user.userId;
-        const updatedTodo = await todoService.update(id, req.body, userId);
+        const updatedTodo = await todoService.update(req.params.id, req.body);
         res.json({ message: "Todo updated successfully", data: updatedTodo });
     } catch (err) {
         res.status(500).json({ error: "Could not update todo" });
@@ -45,13 +50,7 @@ const updateTodo = async (req, res) => {
 
 const getTodoById = async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.user.userId;
-        const todo = await todoService.findOne(id, userId);
-        
-        if (!todo) {
-            return res.status(404).json({ error: "Todo not found" });
-        }
+        const todo = await todoService.findOne(req.params.id);
         res.json({ data: todo });
     } catch (err) {
         res.status(500).json({ error: "Could not fetch todo" });
@@ -60,15 +59,21 @@ const getTodoById = async (req, res) => {
 
 const toggleTodoStatus = async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.user.userId;
         const { completed } = req.body;
-        
-        const updatedTodo = await todoService.update(id, { completed }, userId);
+        const updatedTodo = await todoService.update(req.params.id, { completed });
         res.json({ message: "Status updated successfully", data: updatedTodo });
     } catch (err) {
         res.status(500).json({ error: "Could not update status" });
     }
 };
+const getAllTodosForAdmin = async (req, res) => {
+    try {
+        // بما أننا أدمن، نجلب كل شيء من الـ service
+        const todos = await todoService.findAllAdmin(); 
+        res.json({ data: todos });
+    } catch (err) {
+        res.status(500).json({ error: "Could not fetch all todos" });
+    }
+};
 
-module.exports = {getTodos,createTodo,deleteTodo,updateTodo,getTodoById,toggleTodoStatus };
+module.exports = { getTodos, createTodo, deleteTodo, updateTodo, getTodoById,getAllTodosForAdmin, toggleTodoStatus };

@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
-
+const prisma = require('../DB/prisma');
 // هذا الميدل وير للتحقق من هوية المستخدم (التوكين)
-function authMiddleware(req, res, next) {
+function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -25,4 +25,19 @@ function authorizeAdmin(req, res, next) {
     }
 }
 
-module.exports = { authMiddleware, authorizeAdmin };
+const checkOwnership = async (req, res, next) => {
+    const { id } = req.params;
+    const { userId, role } = req.user; // يأتي من authenticateToken
+
+    // إذا كان أدمن، نسمح له بالمرور فوراً (تخطي التحقق)
+    if (role === 'ADMIN') return next();
+
+    // التحقق للمستخدم العادي
+    const todo = await prisma.todo.findUnique({ where: { id: parseInt(id) } });
+
+    if (!todo) return res.status(404).json({ error: "Todo not found" });
+    if (todo.userId !== userId) return res.status(403).json({ error: "Access denied: Not your todo" });
+
+    next(); 
+};
+module.exports = { authenticateToken, authorizeAdmin ,checkOwnership};

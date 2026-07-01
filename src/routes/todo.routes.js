@@ -2,17 +2,21 @@ const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/todo.controller');
 const { validateTodo } = require('../validators/todo.validator');
-console.log("Controller Debug:", controller);
-// المسارات مع التحقق (Validation)
-router.post('/new', validateTodo, controller.createTodo);
-router.put('/update/:id', validateTodo, controller.updateTodo);
+// استيراد الميدل ويرز المركزية
+const { authenticateToken, authorizeAdmin, checkOwnership } = require('../middleware/auth.Middleware');
 
-// المسارات بدون تحقق (لأنها لا تستقبل بيانات من الـ Body)
-router.get('/get', controller.getTodos);
-router.get('/get/:id', controller.getTodoById);
-router.delete('/del/:id', controller.deleteTodo);
+router.post('/new', authenticateToken, validateTodo, controller.createTodo);
 
-// مسار تحديث الحالة (PATCH)
-router.patch('/:id/status', controller.toggleTodoStatus);
+router.get('/get', authenticateToken, controller.getTodos);
+
+router.get('/get/:id', authenticateToken, checkOwnership, controller.getTodoById);
+
+router.put('/update/:id', authenticateToken, checkOwnership, validateTodo, controller.updateTodo);
+
+router.patch('/:id/status', authenticateToken, checkOwnership, controller.toggleTodoStatus);
+
+router.delete('/del/:id', authenticateToken, checkOwnership, controller.deleteTodo);
+
+
 
 module.exports = router;

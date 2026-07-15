@@ -1,12 +1,39 @@
-// src/routes/auth.routes.js
+
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 
-// مسار التسجيل - رابط الطلب سيكون POST /api/auth/register
+/**
+ * @swagger
+ * {
+ * "/api/auth/register": {
+ * "post": {
+ * "summary": "Register a new user",
+ * "tags": ["Authentication"],
+ * "responses": {
+ * "201": { "description": "User registered successfully" }
+ * }
+ * }
+ * }
+ * }
+ */
 router.post('/register', authController.register);
 
-// مسار تسجيل الدخول - رابط الطلب سيكون POST /api/auth/login
+/**
+ * @swagger
+ * {
+ * "/api/auth/login": {
+ * "post": {
+ * "summary": "User login",
+ * "tags": ["Authentication"],
+ * "responses": {
+ * "200": { "description": "Login successful" }
+ * }
+ * }
+ * }
+ * }
+ */
 router.post('/login', authController.login);
 
 module.exports = router;
+

@@ -72,3 +72,7 @@ PUT /update/:id: Update task details (requires authentication & ownership).
 PATCH /:id/status: Toggle task status (requires authentication & ownership).
 
 DELETE /del/:id: Remove a task (requires authentication & ownership).
+
+
+to open swagger:
+http://localhost:3000/api-docs
